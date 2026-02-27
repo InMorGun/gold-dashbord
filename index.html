@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GOLD DASHBOARD · XAU/USD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold-light:   #f5d97f;
+      --gold:         #d4a843;
+      --gold-dark:    #9a6f1e;
+      --bg-deep:      #080707;
+      --bg-card:      #0f0e0c;
+      --bg-card2:     #131110;
+      --border:       rgba(212,168,67,0.18);
+      --border-glow:  rgba(212,168,67,0.45);
+      --text-dim:     rgba(245,217,127,0.4);
+      --text-mid:     rgba(245,217,127,0.7);
+      --text:         #f5d97f;
+      --red:          #e05858;
+      --green:        #4caf84;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1000; opacity: 0.6;
+    }
+
+    /* ── radial glow bg ── */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -20%; left: 50%; transform: translateX(-50%);
+      width: 80vw; height: 60vh;
+      background: radial-gradient(ellipse at center, rgba(212,168,67,0.07) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.4rem 2.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(212,168,67,0.06) 0%, transparent 100%);
+    }
+
+    .logo-wrap {
+      display: flex; align-items: baseline; gap: .7rem;
+    }
+
+    .logo-symbol {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 300; letter-spacing: .12em;
+      color: var(--gold-light);
+      text-shadow: 0 0 28px rgba(212,168,67,0.5);
+    }
+
+    .logo-sub {
+      font-size: .65rem; letter-spacing: .25em; color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex; align-items: center; gap: 2rem;
+    }
+
+    .live-badge {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .62rem; letter-spacing: .2em; color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(.7); }
+    }
+
+    .header-time {
+      font-size: .62rem; color: var(--text-dim); letter-spacing: .1em;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      position: relative; z-index: 5;
+      padding: 2rem 2.5rem 3rem;
+      max-width: 1600px; margin: 0 auto;
+      display: grid; gap: 1.5rem;
+    }
+
+    /* ── TICKER ROW ── */
+    .ticker-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .ticker-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 1.2rem 1.4rem;
+      position: relative; overflow: hidden;
+      transition: border-color .3s;
+      animation: fadeUp .6s ease both;
+    }
+
+    .ticker-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .ticker-card:hover { border-color: var(--border-glow); }
+    .ticker-card:hover::before { opacity: 1; }
+
+    .ticker-label {
+      font-size: .6rem; letter-spacing: .22em; color: var(--text-dim);
+      text-transform: uppercase; margin-bottom: .5rem;
+    }
+
+    .ticker-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.9rem; font-weight: 300;
+      color: var(--gold-light); line-height: 1;
+    }
+
+    .ticker-value.up   { color: var(--green); }
+    .ticker-value.down { color: var(--red); }
+
+    .ticker-sub {
+      font-size: .6rem; color: var(--text-dim);
+      margin-top: .4rem; letter-spacing: .08em;
+    }
+
+    .ticker-badge {
+      display: inline-block;
+      font-size: .58rem; letter-spacing: .1em;
+      padding: .2rem .5rem;
+      border-radius: 1px; margin-top: .3rem;
+    }
+
+    .ticker-badge.up   { background: rgba(76,175,132,.15); color: var(--green); border: 1px solid rgba(76,175,132,.25); }
+    .ticker-badge.down { background: rgba(224,88,88,.15);  color: var(--red);   border: 1px solid rgba(224,88,88,.25); }
+
+    /* ── MAIN CHART ── */
+    .chart-section {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1rem; align-items: start;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      animation: fadeUp .6s ease both;
+    }
+
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.4rem .8rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: .65rem; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--text-mid);
+    }
+
+    .card-title span {
+      color: var(--gold); margin-left: .5rem;
+    }
+
+    .tab-group {
+      display: flex; gap: .3rem;
+    }
+
+    .tab {
+      font-size: .58rem; letter-spacing: .12em;
+      padding: .25rem .6rem; cursor: pointer;
+      color: var(--text-dim); border: 1px solid transparent;
+      border-radius: 1px; transition: all .2s;
+      background: none; font-family: 'DM Mono', monospace;
+    }
+
+    .tab:hover  { color: var(--gold); border-color: var(--border); }
+    .tab.active { color: var(--gold); border-color: var(--gold-dark); background: rgba(212,168,67,.08); }
+
+    .chart-wrap {
+      width: 100%; height: 500px;
+    }
+
+    .chart-wrap iframe,
+    .chart-wrap .tradingview-widget-container,
+    .chart-wrap .tradingview-widget-container__widget {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ── SIDE WIDGETS ── */
+    .side-widgets {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+
+    .mini-chart-wrap {
+      height: 200px;
+    }
+
+    /* ── SYMBOL INFO ── */
+    .info-wrap {
+      height: 300px;
+    }
+
+    /* ── BOTTOM ROW ── */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .hotlist-wrap, .news-wrap {
+      height: 300px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 5;
+      text-align: center; padding: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: .58rem; letter-spacing: .15em;
+      color: var(--text-dim); text-transform: uppercase;
+    }
+
+    footer span { color: var(--gold-dark); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .ticker-card:nth-child(1) { animation-delay: .05s; }
+    .ticker-card:nth-child(2) { animation-delay: .12s; }
+    .ticker-card:nth-child(3) { animation-delay: .19s; }
+    .ticker-card:nth-child(4) { animation-delay: .26s; }
+    .chart-section > *:nth-child(1) { animation-delay: .3s; }
+    .chart-section > *:nth-child(2) { animation-delay: .38s; }
+    .bottom-row > * { animation-delay: .45s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) {
+      .chart-section { grid-template-columns: 1fr; }
+      .side-widgets { flex-direction: row; flex-wrap: wrap; }
+      .side-widgets .card { flex: 1 1 300px; }
+      .mini-chart-wrap, .info-wrap { height: 250px; }
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 1rem 1.2rem; }
+      main   { padding: 1rem 1.2rem 2rem; }
+      .ticker-row { grid-template-columns: 1fr 1fr; }
+      .bottom-row { grid-template-columns: 1fr; }
+      .logo-symbol { font-size: 1.5rem; }
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg-deep); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header>
+  <div class="logo-wrap">
+    <div class="logo-symbol">GOLD</div>
+    <div class="logo-sub">XAU / USD · Live Dashboard</div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      Live Market
+    </div>
+    <div class="header-time" id="clock">—</div>
+  </div>
+</header>
+
+<!-- ─── MAIN ─── -->
+<main>
+
+  <!-- Ticker Row: TradingView Single Quote Widgets -->
+  <div class="ticker-row">
+
+    <!-- Price card (populated by TV widget) -->
+    <div class="ticker-card" style="animation-delay:.05s">
+      <div class="ticker-label">XAU/USD · Spot Price</div>
+      <!-- TradingView Single Quote Widget -->
+      <div class="tradingview-widget-container" style="height:80px">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+        {
+          "symbol": "OANDA:XAUUSD",
+          "width": "100%",
+          "isTransparent": true,
+          "colorTheme": "dark",
+          "locale": "en"
+        }
+        </script>
+      </div>
+    </div>
+
+    <!-- GC1! Futures -->
+    <div class="ticker-card" style="animation-delay:.12s">
+      <div class="ticker-label">GC1! · Gold Futures</div>
+      <div class="tradingview-widget-container" style="height:80px">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+        {
+          "symbol": "COMEX:GC1!",
+          "width": "100%",
+          "isTransparent": true,
+          "colorTheme": "dark",
+          "locale": "en"
+        }
+        </script>
+      </div>
+    </div>
+
+    <!-- DXY -->
+    <div class="ticker-card" style="animation-delay:.19s">
+      <div class="ticker-label">DXY · US Dollar Index</div>
+      <div class="tradingview-widget-container" style="height:80px">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+        {
+          "symbol": "TVC:DXY",
+          "width": "100%",
+          "isTransparent": true,
+          "colorTheme": "dark",
+          "locale": "en"
+        }
+        </script>
+      </div>
+    </div>
+
+    <!-- Silver XAG/USD -->
+    <div class="ticker-card" style="animation-delay:.26s">
+      <div class="ticker-label">XAG/USD · Silver Spot</div>
+      <div class="tradingview-widget-container" style="height:80px">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+        {
+          "symbol": "OANDA:XAGUSD",
+          "width": "100%",
+          "isTransparent": true,
+          "colorTheme": "dark",
+          "locale": "en"
+        }
+        </script>
+      </div>
+    </div>
+
+  </div><!-- /ticker-row -->
+
+
+  <!-- ─── CHART + SIDE ─── -->
+  <div class="chart-section">
+
+    <!-- Main Advanced Chart -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Price Chart <span>XAUUSD</span></div>
+        <div class="tab-group" id="interval-tabs">
+          <button class="tab" data-interval="1">1m</button>
+          <button class="tab" data-interval="5">5m</button>
+          <button class="tab" data-interval="15">15m</button>
+          <button class="tab" data-interval="60">1H</button>
+          <button class="tab active" data-interval="D">1D</button>
+          <button class="tab" data-interval="W">1W</button>
+        </div>
+      </div>
+      <div class="chart-wrap" id="main-chart">
+        <!-- TradingView Advanced Chart Widget -->
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+          <div id="tradingview_main" style="height:calc(100% - 32px);width:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+          <script type="text/javascript">
+            var tvWidget;
+            function initChart(interval) {
+              if (tvWidget) {
+                try { tvWidget.remove(); } catch(e){}
+              }
+              tvWidget = new TradingView.widget({
+                "autosize": true,
+                "symbol": "OANDA:XAUUSD",
+                "interval": interval || "D",
+                "timezone": "Asia/Bangkok",
+                "theme": "dark",
+                "style": "1",
+                "locale": "th",
+                "toolbar_bg": "#0f0e0c",
+                "enable_publishing": false,
+                "hide_top_toolbar": false,
+                "hide_legend": false,
+                "save_image": false,
+                "container_id": "tradingview_main",
+                "backgroundColor": "rgba(8,7,7,1)",
+                "gridColor": "rgba(212,168,67,0.05)",
+                "overrides": {
+                  "paneProperties.background": "#080707",
+                  "paneProperties.backgroundType": "solid",
+                  "scalesProperties.textColor": "#6b5a2d"
+                },
+                "studies": ["MASimple@tv-basicstudies", "RSI@tv-basicstudies"]
+              });
+            }
+            initChart("D");
+
+            // Tab switching
+            document.getElementById('interval-tabs').addEventListener('click', function(e) {
+              var btn = e.target.closest('[data-interval]');
+              if (!btn) return;
+              document.querySelectorAll('#interval-tabs .tab').forEach(t => t.classList.remove('active'));
+              btn.classList.add('active');
+              initChart(btn.dataset.interval);
+            });
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDE WIDGETS -->
+    <div class="side-widgets">
+
+      <!-- Symbol Info -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Symbol Info</div>
+        </div>
+        <div class="info-wrap">
+          <div class="tradingview-widget-container" style="height:100%;width:100%">
+            <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js" async>
+            {
+              "symbol": "OANDA:XAUUSD",
+              "width": "100%",
+              "locale": "en",
+              "colorTheme": "dark",
+              "isTransparent": true
+            }
+            </script>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini Chart — Silver -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">XAG/USD <span>Mini</span></div>
+        </div>
+        <div class="mini-chart-wrap">
+          <div class="tradingview-widget-container" style="height:100%;width:100%">
+            <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+            {
+              "symbol": "OANDA:XAGUSD",
+              "width": "100%",
+              "height": "100%",
+              "locale": "en",
+              "dateRange": "1M",
+              "colorTheme": "dark",
+              "isTransparent": true,
+              "autosize": true,
+              "largeChartUrl": ""
+            }
+            </script>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /side-widgets -->
+
+  </div><!-- /chart-section -->
+
+
+  <!-- ─── BOTTOM ROW ─── -->
+  <div class="bottom-row">
+
+    <!-- Market Overview / Hotlist -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Metals Market <span>Overview</span></div>
+      </div>
+      <div class="hotlist-wrap">
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+          <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+          {
+            "colorTheme": "dark",
+            "dateRange": "12M",
+            "showChart": true,
+            "locale": "en",
+            "width": "100%",
+            "height": "100%",
+            "largeChartUrl": "",
+            "isTransparent": true,
+            "showSymbolLogo": false,
+            "showFloatingTooltip": false,
+            "plotLineColorGrowing": "rgba(212,168,67,0.8)",
+            "plotLineColorFalling": "rgba(224,88,88,0.8)",
+            "gridLineColor": "rgba(212,168,67,0.06)",
+            "scaleFontColor": "rgba(245,217,127,0.4)",
+            "belowLineFillColorGrowing": "rgba(212,168,67,0.04)",
+            "belowLineFillColorFalling": "rgba(224,88,88,0.04)",
+            "belowLineFillColorGrowingBottom": "transparent",
+            "belowLineFillColorFallingBottom": "transparent",
+            "symbolActiveColor": "rgba(212,168,67,0.1)",
+            "tabs": [
+              {
+                "title": "Metals",
+                "symbols": [
+                  { "s": "OANDA:XAUUSD", "d": "Gold" },
+                  { "s": "OANDA:XAGUSD", "d": "Silver" },
+                  { "s": "COMEX:GC1!",   "d": "Gold Futures" },
+                  { "s": "TVC:GOLD",     "d": "Gold CFD" },
+                  { "s": "COMEX:SI1!",   "d": "Silver Futures" },
+                  { "s": "NYMEX:PL1!",   "d": "Platinum" }
+                ],
+                "originalTitle": "Metals"
+              },
+              {
+                "title": "Related",
+                "symbols": [
+                  { "s": "TVC:DXY",      "d": "US Dollar" },
+                  { "s": "TVC:US10Y",    "d": "US 10Y Bond" },
+                  { "s": "FRED:CPIAUCSL","d": "CPI" },
+                  { "s": "COMEX:HG1!",   "d": "Copper" }
+                ],
+                "originalTitle": "Related"
+              }
+            ]
+          }
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Analysis -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Technical Analysis <span>XAU/USD</span></div>
+      </div>
+      <div style="height:300px;">
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+          <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+          {
+            "interval": "1D",
+            "width": "100%",
+            "isTransparent": true,
+            "height": "100%",
+            "symbol": "OANDA:XAUUSD",
+            "showIntervalTabs": true,
+            "displayMode": "single",
+            "locale": "en",
+            "colorTheme": "dark"
+          }
+          </script>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /bottom-row -->
+
+</main>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  Gold Dashboard · Data powered by <span>TradingView</span> · Deploy on <span>Vercel</span>
+</footer>
+
+<!-- Clock -->
+<script>
+  function updateClock() {
+    var now = new Date();
+    var options = { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    document.getElementById('clock').textContent = 'BKK ' + now.toLocaleTimeString('th-TH', options);
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
