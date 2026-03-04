@@ -1,623 +1,769 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GOLD DASHBOARD · XAU/USD</title>
+  <title>NEXUS_TERMINAL // GOLD & CRYPTO</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=VT323&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --gold-light:   #f5d97f;
-      --gold:         #d4a843;
-      --gold-dark:    #9a6f1e;
-      --bg-deep:      #080707;
-      --bg-card:      #0f0e0c;
-      --bg-card2:     #131110;
-      --border:       rgba(212,168,67,0.18);
-      --border-glow:  rgba(212,168,67,0.45);
-      --text-dim:     rgba(245,217,127,0.4);
-      --text-mid:     rgba(245,217,127,0.7);
-      --text:         #f5d97f;
-      --red:          #e05858;
-      --green:        #4caf84;
+      --green:      #00ff41;
+      --green-dim:  #00ff4155;
+      --green-glow: #00ff4122;
+      --cyan:       #00e5ff;
+      --cyan-dim:   #00e5ff44;
+      --gold:       #ffd000;
+      --gold-dim:   #ffd00044;
+      --red:        #ff2d55;
+      --bg:         #020805;
+      --bg2:        #050f08;
+      --bg3:        #081209;
+      --border:     #00ff4130;
+      --border2:    #00ff4155;
+      --text-dim:   #00ff4166;
+      --text-faint: #00ff4133;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
-
     body {
-      background: var(--bg-deep);
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', monospace;
       min-height: 100vh;
       overflow-x: hidden;
+      cursor: crosshair;
     }
 
-    /* ── noise texture overlay ── */
+    /* SCANLINES */
     body::before {
       content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 1000; opacity: 0.6;
+      position: fixed; inset: 0; z-index: 9999;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+      pointer-events: none;
     }
 
-    /* ── radial glow bg ── */
+    /* CRT VIGNETTE */
     body::after {
       content: '';
-      position: fixed;
-      top: -20%; left: 50%; transform: translateX(-50%);
-      width: 80vw; height: 60vh;
-      background: radial-gradient(ellipse at center, rgba(212,168,67,0.07) 0%, transparent 70%);
-      pointer-events: none; z-index: 0;
+      position: fixed; inset: 0; z-index: 9998;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.75) 100%);
+      pointer-events: none;
     }
 
-    /* ── HEADER ── */
+    /* MATRIX BG */
+    #matrix-bg {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 0; opacity: 0.06; pointer-events: none;
+    }
+
+    /* GRID */
+    .grid-overlay {
+      position: fixed; inset: 0; z-index: 1;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none; opacity: 0.5;
+    }
+
+    /* HEADER */
     header {
       position: relative; z-index: 10;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 1.4rem 2.5rem 1rem;
-      border-bottom: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(212,168,67,0.06) 0%, transparent 100%);
+      padding: 0 2rem; height: 56px;
+      border-bottom: 1px solid var(--border2);
+      background: linear-gradient(90deg, rgba(0,255,65,0.05), var(--bg2), transparent);
+    }
+    .header-left { display: flex; align-items: center; gap: 1.5rem; }
+    .logo {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.05rem; font-weight: 900;
+      color: var(--green); letter-spacing: .15em;
+      text-shadow: 0 0 20px var(--green), 0 0 40px var(--green-dim);
+    }
+    .logo span { color: var(--cyan); text-shadow: 0 0 20px var(--cyan); }
+    .sys-tag {
+      font-size: .58rem; letter-spacing: .28em; color: var(--text-dim);
+      border: 1px solid var(--border); padding: .2rem .6rem;
+    }
+    .header-right { display: flex; align-items: center; gap: 1.5rem; }
+    .status-row { display: flex; align-items: center; gap: 1rem; font-size: .58rem; letter-spacing: .15em; color: var(--text-dim); }
+    .status-item { display: flex; align-items: center; gap: .4rem; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; animation: blink 2s ease infinite; }
+    .dot.g { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .dot.c { background: var(--cyan);  box-shadow: 0 0 8px var(--cyan);  animation-delay: .5s; }
+    .dot.o { background: var(--gold);  box-shadow: 0 0 8px var(--gold);  animation-delay: 1s; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+    .clock-block {
+      font-family: 'VT323', monospace; font-size: 1.4rem;
+      color: var(--cyan); text-shadow: 0 0 12px var(--cyan); letter-spacing: .1em;
     }
 
-    .logo-wrap {
-      display: flex; align-items: baseline; gap: .7rem;
-    }
-
-    .logo-symbol {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem; font-weight: 300; letter-spacing: .12em;
-      color: var(--gold-light);
-      text-shadow: 0 0 28px rgba(212,168,67,0.5);
-    }
-
-    .logo-sub {
-      font-size: .65rem; letter-spacing: .25em; color: var(--text-dim);
-      text-transform: uppercase;
-    }
-
-    .header-right {
-      display: flex; align-items: center; gap: 2rem;
-    }
-
-    .live-badge {
-      display: flex; align-items: center; gap: .5rem;
-      font-size: .62rem; letter-spacing: .2em; color: var(--gold);
-      text-transform: uppercase;
-    }
-
-    .live-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 8px var(--green);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: .5; transform: scale(.7); }
-    }
-
-    .header-time {
-      font-size: .62rem; color: var(--text-dim); letter-spacing: .1em;
-    }
-
-    /* ── MAIN LAYOUT ── */
+    /* MAIN */
     main {
       position: relative; z-index: 5;
-      padding: 2rem 2.5rem 3rem;
-      max-width: 1600px; margin: 0 auto;
-      display: grid; gap: 1.5rem;
+      padding: 1.4rem 2rem 3rem; max-width: 1800px; margin: 0 auto;
+      display: grid; gap: 1.1rem;
     }
 
-    /* ── TICKER ROW ── */
-    .ticker-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
+    /* SECTION LABEL */
+    .sec-label {
+      display: flex; align-items: center; gap: .8rem;
+      font-size: .6rem; letter-spacing: .3em; text-transform: uppercase;
     }
+    .sec-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, currentColor, transparent);
+      opacity: .25;
+    }
+    .sec-label.gold { color: var(--gold); }
+    .sec-label.cyan { color: var(--cyan); }
+    .sec-label.grn  { color: var(--green); }
 
-    .ticker-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      padding: 1.2rem 1.4rem;
+    /* TICKER STRIP */
+    .ticker-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: .8rem; }
+
+    .tick {
+      background: var(--bg2); border: 1px solid var(--border);
+      padding: .85rem 1rem; position: relative; overflow: hidden;
+      transition: border-color .25s;
+      animation: fadeUp .5s ease both;
+    }
+    .tick::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--green), transparent);
+      transform: scaleX(0); transition: transform .3s;
+    }
+    .tick:hover { border-color: var(--green); }
+    .tick:hover::after { transform: scaleX(1); }
+    .tick.gold-t:hover { border-color: var(--gold); }
+    .tick.gold-t::after { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+    .tick.cyan-t:hover { border-color: var(--cyan); }
+    .tick.cyan-t::after { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+    .tick-idx {
+      position: absolute; top: .4rem; right: .6rem;
+      font-size: .5rem; color: var(--text-faint);
+    }
+    .tick-label { font-size: .52rem; letter-spacing: .2em; color: var(--text-dim); margin-bottom: .4rem; }
+    .tick-tv { height: 56px; overflow: hidden; }
+    .tick-tv .tradingview-widget-container,
+    .tick-tv .tradingview-widget-container__widget { height: 56px !important; }
+
+    /* PANEL */
+    .panel {
+      background: var(--bg2); border: 1px solid var(--border);
       position: relative; overflow: hidden;
-      transition: border-color .3s;
-      animation: fadeUp .6s ease both;
+      animation: fadeUp .5s ease both;
     }
-
-    .ticker-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
-      opacity: 0;
-      transition: opacity .3s;
+    .panel::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--green), transparent); opacity: .5;
     }
+    .panel.gold-p::before { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+    .panel.cyan-p::before { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
 
-    .ticker-card:hover { border-color: var(--border-glow); }
-    .ticker-card:hover::before { opacity: 1; }
-
-    .ticker-label {
-      font-size: .6rem; letter-spacing: .22em; color: var(--text-dim);
-      text-transform: uppercase; margin-bottom: .5rem;
-    }
-
-    .ticker-value {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.9rem; font-weight: 300;
-      color: var(--gold-light); line-height: 1;
-    }
-
-    .ticker-value.up   { color: var(--green); }
-    .ticker-value.down { color: var(--red); }
-
-    .ticker-sub {
-      font-size: .6rem; color: var(--text-dim);
-      margin-top: .4rem; letter-spacing: .08em;
-    }
-
-    .ticker-badge {
-      display: inline-block;
-      font-size: .58rem; letter-spacing: .1em;
-      padding: .2rem .5rem;
-      border-radius: 1px; margin-top: .3rem;
-    }
-
-    .ticker-badge.up   { background: rgba(76,175,132,.15); color: var(--green); border: 1px solid rgba(76,175,132,.25); }
-    .ticker-badge.down { background: rgba(224,88,88,.15);  color: var(--red);   border: 1px solid rgba(224,88,88,.25); }
-
-    /* ── MAIN CHART ── */
-    .chart-section {
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 1rem; align-items: start;
-    }
-
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      animation: fadeUp .6s ease both;
-    }
-
-    .card-header {
+    .panel-head {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 1.4rem .8rem;
-      border-bottom: 1px solid var(--border);
+      padding: .65rem 1rem; border-bottom: 1px solid var(--border);
+    }
+    .panel-head.gold-h { background: linear-gradient(90deg, rgba(255,208,0,.04), transparent); }
+    .panel-head.cyan-h { background: linear-gradient(90deg, rgba(0,229,255,.04), transparent); }
+    .panel-head.grn-h  { background: linear-gradient(90deg, rgba(0,255,65,.04), transparent); }
+
+    .panel-title {
+      font-family: 'Orbitron', monospace;
+      font-size: .58rem; font-weight: 700; letter-spacing: .2em;
+    }
+    .panel-title.g { color: var(--green); }
+    .panel-title.o { color: var(--gold); }
+    .panel-title.c { color: var(--cyan); }
+
+    .panel-tag {
+      font-size: .52rem; letter-spacing: .15em; padding: .15rem .5rem;
+      border: 1px solid var(--border2); color: var(--text-dim);
     }
 
-    .card-title {
-      font-size: .65rem; letter-spacing: .2em;
-      text-transform: uppercase; color: var(--text-mid);
-    }
-
-    .card-title span {
-      color: var(--gold); margin-left: .5rem;
-    }
-
-    .tab-group {
-      display: flex; gap: .3rem;
-    }
-
+    /* TABS */
+    .tabs { display: flex; gap: .25rem; }
     .tab {
-      font-size: .58rem; letter-spacing: .12em;
-      padding: .25rem .6rem; cursor: pointer;
-      color: var(--text-dim); border: 1px solid transparent;
-      border-radius: 1px; transition: all .2s;
-      background: none; font-family: 'DM Mono', monospace;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .52rem; letter-spacing: .1em; padding: .2rem .5rem;
+      background: none; border: 1px solid transparent; color: var(--text-dim);
+      cursor: pointer; transition: all .2s;
     }
+    .tab:hover { color: var(--green); border-color: var(--border2); }
+    .tab.a     { color: var(--bg); background: var(--green); border-color: var(--green); }
+    .tab.oa    { color: var(--bg); background: var(--gold);  border-color: var(--gold);  }
+    .tab.ca    { color: var(--bg); background: var(--cyan);  border-color: var(--cyan);  }
 
-    .tab:hover  { color: var(--gold); border-color: var(--border); }
-    .tab.active { color: var(--gold); border-color: var(--gold-dark); background: rgba(212,168,67,.08); }
+    /* LAYOUTS */
+    .col2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; align-items: start; }
+    .col3 { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 1.1rem; align-items: start; }
 
-    .chart-wrap {
-      width: 100%; height: 500px;
+    /* CHART HEIGHTS */
+    .h500 { height: 500px; width: 100%; }
+    .h350 { height: 350px; width: 100%; }
+    .h300 { height: 300px; width: 100%; }
+    .h260 { height: 260px; width: 100%; }
+
+    /* CRYPTO TABLE */
+    .tbl-wrap { overflow-y: auto; max-height: 355px; }
+    .tbl-wrap::-webkit-scrollbar { width: 3px; }
+    .tbl-wrap::-webkit-scrollbar-thumb { background: var(--cyan); }
+
+    table.ctbl { width: 100%; border-collapse: collapse; font-size: .62rem; }
+    table.ctbl thead th {
+      padding: .38rem .7rem; border-bottom: 1px solid var(--border2);
+      color: var(--text-dim); letter-spacing: .12em; text-align: left; font-weight: 400;
+      position: sticky; top: 0; background: var(--bg2);
     }
+    table.ctbl thead th:nth-child(3),
+    table.ctbl thead th:nth-child(4),
+    table.ctbl thead th:nth-child(5),
+    table.ctbl thead th:nth-child(6) { text-align: right; }
 
-    .chart-wrap iframe,
-    .chart-wrap .tradingview-widget-container,
-    .chart-wrap .tradingview-widget-container__widget {
-      width: 100% !important;
-      height: 100% !important;
+    table.ctbl tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    table.ctbl tbody tr:hover { background: rgba(0,229,255,.03); }
+    table.ctbl td { padding: .45rem .7rem; vertical-align: middle; }
+    table.ctbl td:nth-child(3),
+    table.ctbl td:nth-child(4),
+    table.ctbl td:nth-child(5),
+    table.ctbl td:nth-child(6) { text-align: right; }
+
+    .rnk { font-family: 'VT323', monospace; font-size: .85rem; color: var(--text-faint); }
+    .coin-cell { display: flex; align-items: center; gap: .55rem; }
+    .coin-ico {
+      width: 20px; height: 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .48rem; font-weight: 700; border: 1px solid; flex-shrink: 0;
     }
+    .coin-nm  { font-size: .62rem; }
+    .coin-sym { font-size: .5rem; color: var(--text-dim); }
+    .prc { font-family: 'Orbitron', monospace; font-size: .65rem; }
+    .chg { font-size: .58rem; padding: .08rem .28rem; }
+    .up  { color: var(--green); }
+    .dn  { color: var(--red); }
+    .bar-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .bar-pct  { font-size: .5rem; }
+    .bar-bg   { width: 60px; height: 3px; background: var(--bg3); overflow: hidden; }
+    .bar-fill { height: 100%; transition: width .8s ease; }
 
-    /* ── SIDE WIDGETS ── */
-    .side-widgets {
-      display: flex; flex-direction: column; gap: 1rem;
+    /* STAT ROW */
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; }
+    .stat-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      padding: .85rem 1rem; position: relative;
+      animation: fadeUp .6s ease both;
     }
-
-    .mini-chart-wrap {
-      height: 200px;
+    .stat-lbl { font-size: .52rem; letter-spacing: .2em; color: var(--text-dim); margin-bottom: .45rem; }
+    .stat-val {
+      font-family: 'VT323', monospace; font-size: 1.9rem; line-height: 1;
     }
+    .stat-val.g { color: var(--green); text-shadow: 0 0 10px var(--green-dim); }
+    .stat-val.o { color: var(--gold);  text-shadow: 0 0 10px var(--gold-dim); }
+    .stat-val.c { color: var(--cyan);  text-shadow: 0 0 10px var(--cyan-dim); }
+    .stat-val.r { color: var(--red);   text-shadow: 0 0 10px #ff2d5544; }
+    .stat-note  { font-size: .5rem; color: var(--text-faint); margin-top: .3rem; }
 
-    /* ── SYMBOL INFO ── */
-    .info-wrap {
-      height: 300px;
+    /* LOADER */
+    .loader {
+      display: flex; align-items: center; justify-content: center;
+      height: 180px; font-size: .65rem; letter-spacing: .2em; color: var(--text-dim);
+      animation: flicker 1.2s ease infinite;
     }
+    @keyframes flicker { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-    /* ── BOTTOM ROW ── */
-    .bottom-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
-    .hotlist-wrap, .news-wrap {
-      height: 300px;
-    }
-
-    /* ── FOOTER ── */
+    /* FOOTER */
     footer {
       position: relative; z-index: 5;
-      text-align: center; padding: 1.5rem;
+      text-align: center; padding: 1rem;
       border-top: 1px solid var(--border);
-      font-size: .58rem; letter-spacing: .15em;
-      color: var(--text-dim); text-transform: uppercase;
+      font-size: .52rem; letter-spacing: .2em; color: var(--text-faint);
     }
+    footer .hl  { color: var(--green); }
+    footer .hl2 { color: var(--cyan); }
 
-    footer span { color: var(--gold-dark); }
-
-    /* ── ANIMATIONS ── */
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
+      from { opacity: 0; transform: translateY(12px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+    .tick:nth-child(1){animation-delay:.04s}.tick:nth-child(2){animation-delay:.1s}
+    .tick:nth-child(3){animation-delay:.16s}.tick:nth-child(4){animation-delay:.22s}
+    .tick:nth-child(5){animation-delay:.28s}
 
-    .ticker-card:nth-child(1) { animation-delay: .05s; }
-    .ticker-card:nth-child(2) { animation-delay: .12s; }
-    .ticker-card:nth-child(3) { animation-delay: .19s; }
-    .ticker-card:nth-child(4) { animation-delay: .26s; }
-    .chart-section > *:nth-child(1) { animation-delay: .3s; }
-    .chart-section > *:nth-child(2) { animation-delay: .38s; }
-    .bottom-row > * { animation-delay: .45s; }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 1100px) {
-      .chart-section { grid-template-columns: 1fr; }
-      .side-widgets { flex-direction: row; flex-wrap: wrap; }
-      .side-widgets .card { flex: 1 1 300px; }
-      .mini-chart-wrap, .info-wrap { height: 250px; }
-    }
-
-    @media (max-width: 768px) {
-      header { padding: 1rem 1.2rem; }
-      main   { padding: 1rem 1.2rem 2rem; }
-      .ticker-row { grid-template-columns: 1fr 1fr; }
-      .bottom-row { grid-template-columns: 1fr; }
-      .logo-symbol { font-size: 1.5rem; }
-    }
-
-    /* ── SCROLLBAR ── */
+    /* SCROLLBAR */
     ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: var(--bg-deep); }
-    ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 2px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--green); border-radius: 2px; }
+
+    @media (max-width: 1200px) {
+      .col3 { grid-template-columns: 1fr 1fr; }
+      .ticker-strip { grid-template-columns: repeat(3, 1fr); }
+      .stat-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      main { padding: .8rem 1rem 2rem; }
+      .col2, .col3 { grid-template-columns: 1fr; }
+      .ticker-strip { grid-template-columns: 1fr 1fr; }
+      header { padding: 0 1rem; }
+      .logo { font-size: .85rem; }
+      .sys-tag { display: none; }
+    }
   </style>
 </head>
 <body>
 
-<!-- ─── HEADER ─── -->
+<canvas id="matrix-bg"></canvas>
+<div class="grid-overlay"></div>
+
+<!-- HEADER -->
 <header>
-  <div class="logo-wrap">
-    <div class="logo-symbol">GOLD</div>
-    <div class="logo-sub">XAU / USD · Live Dashboard</div>
+  <div class="header-left">
+    <div class="logo">NEXUS_<span>TERMINAL</span></div>
+    <div class="sys-tag">// GOLD &amp; CRYPTO INTELLIGENCE v2.5</div>
   </div>
   <div class="header-right">
-    <div class="live-badge">
-      <div class="live-dot"></div>
-      Live Market
+    <div class="status-row">
+      <div class="status-item"><div class="dot o"></div>GOLD FEED</div>
+      <div class="status-item"><div class="dot c"></div>CRYPTO NET</div>
+      <div class="status-item"><div class="dot g"></div>SYSTEM OK</div>
     </div>
-    <div class="header-time" id="clock">—</div>
+    <div class="clock-block" id="clock">00:00:00</div>
   </div>
 </header>
 
-<!-- ─── MAIN ─── -->
+<!-- MAIN -->
 <main>
 
-  <!-- Ticker Row: TradingView Single Quote Widgets -->
-  <div class="ticker-row">
+  <!-- ══════════════ GOLD ZONE ══════════════ -->
+  <div class="sec-label gold">[ 01 ] // GOLD SURVEILLANCE // XAU · XAG · GC1! · DXY</div>
 
-    <!-- Price card (populated by TV widget) -->
-    <div class="ticker-card" style="animation-delay:.05s">
-      <div class="ticker-label">XAU/USD · Spot Price</div>
-      <!-- TradingView Single Quote Widget -->
-      <div class="tradingview-widget-container" style="height:80px">
-        <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-        {
-          "symbol": "OANDA:XAUUSD",
-          "width": "100%",
-          "isTransparent": true,
-          "colorTheme": "dark",
-          "locale": "en"
-        }
-        </script>
-      </div>
+  <!-- Gold Tickers -->
+  <div class="ticker-strip">
+    <div class="tick gold-t"><div class="tick-idx">01</div>
+      <div class="tick-label">XAU/USD · SPOT GOLD</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"OANDA:XAUUSD","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
     </div>
-
-    <!-- GC1! Futures -->
-    <div class="ticker-card" style="animation-delay:.12s">
-      <div class="ticker-label">GC1! · Gold Futures</div>
-      <div class="tradingview-widget-container" style="height:80px">
-        <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-        {
-          "symbol": "COMEX:GC1!",
-          "width": "100%",
-          "isTransparent": true,
-          "colorTheme": "dark",
-          "locale": "en"
-        }
-        </script>
-      </div>
+    <div class="tick gold-t"><div class="tick-idx">02</div>
+      <div class="tick-label">GC1! · GOLD FUTURES</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"COMEX:GC1!","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
     </div>
-
-    <!-- DXY -->
-    <div class="ticker-card" style="animation-delay:.19s">
-      <div class="ticker-label">DXY · US Dollar Index</div>
-      <div class="tradingview-widget-container" style="height:80px">
-        <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-        {
-          "symbol": "TVC:DXY",
-          "width": "100%",
-          "isTransparent": true,
-          "colorTheme": "dark",
-          "locale": "en"
-        }
-        </script>
-      </div>
+    <div class="tick gold-t"><div class="tick-idx">03</div>
+      <div class="tick-label">XAG/USD · SILVER</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"OANDA:XAGUSD","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
     </div>
-
-    <!-- Silver XAG/USD -->
-    <div class="ticker-card" style="animation-delay:.26s">
-      <div class="ticker-label">XAG/USD · Silver Spot</div>
-      <div class="tradingview-widget-container" style="height:80px">
-        <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-        {
-          "symbol": "OANDA:XAGUSD",
-          "width": "100%",
-          "isTransparent": true,
-          "colorTheme": "dark",
-          "locale": "en"
-        }
-        </script>
-      </div>
+    <div class="tick"><div class="tick-idx">04</div>
+      <div class="tick-label">DXY · DOLLAR INDEX</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"TVC:DXY","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
     </div>
+    <div class="tick"><div class="tick-idx">05</div>
+      <div class="tick-label">US10Y · BOND YIELD</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"TVC:US10Y","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
+    </div>
+  </div>
 
-  </div><!-- /ticker-row -->
+  <!-- Gold Chart + Technical -->
+  <div class="col2">
 
-
-  <!-- ─── CHART + SIDE ─── -->
-  <div class="chart-section">
-
-    <!-- Main Advanced Chart -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Price Chart <span>XAUUSD</span></div>
-        <div class="tab-group" id="interval-tabs">
-          <button class="tab" data-interval="1">1m</button>
-          <button class="tab" data-interval="5">5m</button>
-          <button class="tab" data-interval="15">15m</button>
-          <button class="tab" data-interval="60">1H</button>
-          <button class="tab active" data-interval="D">1D</button>
-          <button class="tab" data-interval="W">1W</button>
+    <div class="panel gold-p" style="animation-delay:.3s">
+      <div class="panel-head gold-h">
+        <div class="panel-title o">// XAU/USD CHART</div>
+        <div class="tabs" id="gtabs">
+          <button class="tab" data-iv="15">15M</button>
+          <button class="tab" data-iv="60">1H</button>
+          <button class="tab oa" data-iv="D">1D</button>
+          <button class="tab" data-iv="W">1W</button>
+          <button class="tab" data-iv="M">MN</button>
         </div>
       </div>
-      <div class="chart-wrap" id="main-chart">
-        <!-- TradingView Advanced Chart Widget -->
+      <div class="h500">
         <div class="tradingview-widget-container" style="height:100%;width:100%">
-          <div id="tradingview_main" style="height:calc(100% - 32px);width:100%"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-          <script type="text/javascript">
-            var tvWidget;
-            function initChart(interval) {
-              if (tvWidget) {
-                try { tvWidget.remove(); } catch(e){}
-              }
-              tvWidget = new TradingView.widget({
-                "autosize": true,
-                "symbol": "OANDA:XAUUSD",
-                "interval": interval || "D",
-                "timezone": "Asia/Bangkok",
-                "theme": "dark",
-                "style": "1",
-                "locale": "th",
-                "toolbar_bg": "#0f0e0c",
-                "enable_publishing": false,
-                "hide_top_toolbar": false,
-                "hide_legend": false,
-                "save_image": false,
-                "container_id": "tradingview_main",
-                "backgroundColor": "rgba(8,7,7,1)",
-                "gridColor": "rgba(212,168,67,0.05)",
-                "overrides": {
-                  "paneProperties.background": "#080707",
-                  "paneProperties.backgroundType": "solid",
-                  "scalesProperties.textColor": "#6b5a2d"
+          <div id="tv_g" style="height:100%;width:100%"></div>
+          <script src="https://s3.tradingview.com/tv.js"></script>
+          <script>
+            var tvG;
+            function initG(iv){
+              if(tvG){try{tvG.remove();}catch(e){}}
+              tvG = new TradingView.widget({
+                autosize:true, symbol:"OANDA:XAUUSD", interval:iv||"D",
+                timezone:"Asia/Bangkok", theme:"dark", style:"1", locale:"en",
+                toolbar_bg:"#050f08", enable_publishing:false, save_image:false,
+                container_id:"tv_g", backgroundColor:"rgba(2,8,5,1)",
+                gridColor:"rgba(0,255,65,0.04)",
+                overrides:{
+                  "paneProperties.background":"#020805",
+                  "scalesProperties.textColor":"#00ff4155",
+                  "mainSeriesProperties.candleStyle.upColor":"#00ff41",
+                  "mainSeriesProperties.candleStyle.downColor":"#ff2d55",
+                  "mainSeriesProperties.candleStyle.wickUpColor":"#00ff4180",
+                  "mainSeriesProperties.candleStyle.wickDownColor":"#ff2d5580",
+                  "mainSeriesProperties.candleStyle.borderUpColor":"#00ff41",
+                  "mainSeriesProperties.candleStyle.borderDownColor":"#ff2d55"
                 },
-                "studies": ["MASimple@tv-basicstudies", "RSI@tv-basicstudies"]
+                studies:["MASimple@tv-basicstudies","RSI@tv-basicstudies","MACD@tv-basicstudies"]
               });
             }
-            initChart("D");
-
-            // Tab switching
-            document.getElementById('interval-tabs').addEventListener('click', function(e) {
-              var btn = e.target.closest('[data-interval]');
-              if (!btn) return;
-              document.querySelectorAll('#interval-tabs .tab').forEach(t => t.classList.remove('active'));
-              btn.classList.add('active');
-              initChart(btn.dataset.interval);
+            initG("D");
+            document.getElementById('gtabs').addEventListener('click',function(e){
+              var b=e.target.closest('[data-iv]');if(!b)return;
+              document.querySelectorAll('#gtabs .tab').forEach(t=>{t.classList.remove('oa');});
+              b.classList.add('oa'); initG(b.dataset.iv);
             });
           </script>
         </div>
       </div>
     </div>
 
-    <!-- SIDE WIDGETS -->
-    <div class="side-widgets">
-
-      <!-- Symbol Info -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Symbol Info</div>
+    <div style="display:flex;flex-direction:column;gap:1.1rem">
+      <!-- Technical Analysis -->
+      <div class="panel gold-p" style="animation-delay:.38s">
+        <div class="panel-head gold-h">
+          <div class="panel-title o">// TECHNICAL GAUGE</div>
+          <div class="panel-tag">XAU/USD</div>
         </div>
-        <div class="info-wrap">
+        <div class="h260">
           <div class="tradingview-widget-container" style="height:100%;width:100%">
             <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js" async>
-            {
-              "symbol": "OANDA:XAUUSD",
-              "width": "100%",
-              "locale": "en",
-              "colorTheme": "dark",
-              "isTransparent": true
-            }
+            <script src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+            {"interval":"1D","width":"100%","isTransparent":true,"height":"100%","symbol":"OANDA:XAUUSD","showIntervalTabs":true,"displayMode":"single","locale":"en","colorTheme":"dark"}
             </script>
           </div>
         </div>
       </div>
 
-      <!-- Mini Chart — Silver -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">XAG/USD <span>Mini</span></div>
+      <!-- Metals Market Overview -->
+      <div class="panel gold-p" style="animation-delay:.45s">
+        <div class="panel-head gold-h">
+          <div class="panel-title o">// METALS MATRIX</div>
         </div>
-        <div class="mini-chart-wrap">
+        <div class="h300">
           <div class="tradingview-widget-container" style="height:100%;width:100%">
             <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-            {
-              "symbol": "OANDA:XAGUSD",
-              "width": "100%",
-              "height": "100%",
-              "locale": "en",
-              "dateRange": "1M",
-              "colorTheme": "dark",
-              "isTransparent": true,
-              "autosize": true,
-              "largeChartUrl": ""
-            }
+            <script src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+            {"colorTheme":"dark","dateRange":"3M","showChart":true,"locale":"en","width":"100%","height":"100%","isTransparent":true,"showSymbolLogo":false,
+             "plotLineColorGrowing":"rgba(0,255,65,0.8)","plotLineColorFalling":"rgba(255,45,85,0.8)",
+             "gridLineColor":"rgba(0,255,65,0.04)","scaleFontColor":"rgba(0,255,65,0.4)",
+             "belowLineFillColorGrowing":"rgba(0,255,65,0.05)","belowLineFillColorFalling":"rgba(255,45,85,0.05)",
+             "belowLineFillColorGrowingBottom":"transparent","belowLineFillColorFallingBottom":"transparent",
+             "symbolActiveColor":"rgba(0,255,65,0.08)",
+             "tabs":[{"title":"Metals","symbols":[
+               {"s":"OANDA:XAUUSD","d":"Gold"},{"s":"OANDA:XAGUSD","d":"Silver"},
+               {"s":"COMEX:GC1!","d":"Gold Futures"},{"s":"NYMEX:PL1!","d":"Platinum"},{"s":"COMEX:HG1!","d":"Copper"}
+             ],"originalTitle":"Metals"},
+             {"title":"Macro","symbols":[
+               {"s":"TVC:DXY","d":"Dollar"},{"s":"TVC:US10Y","d":"10Y Yield"},{"s":"SP:SPX","d":"S&P 500"}
+             ],"originalTitle":"Macro"}]}
             </script>
           </div>
         </div>
       </div>
+    </div>
 
-    </div><!-- /side-widgets -->
-
-  </div><!-- /chart-section -->
+  </div><!-- /col2 gold -->
 
 
-  <!-- ─── BOTTOM ROW ─── -->
-  <div class="bottom-row">
+  <!-- ══════════════ CRYPTO ZONE ══════════════ -->
+  <div class="sec-label cyan" style="margin-top:.4rem">[ 02 ] // CRYPTO INTELLIGENCE // MARKET CAP · DOMINANCE · SENTIMENT</div>
 
-    <!-- Market Overview / Hotlist -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Metals Market <span>Overview</span></div>
+  <!-- Crypto Tickers -->
+  <div class="ticker-strip">
+    <div class="tick cyan-t"><div class="tick-idx">C1</div>
+      <div class="tick-label">BTC/USDT</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"BINANCE:BTCUSDT","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
+    </div>
+    <div class="tick cyan-t"><div class="tick-idx">C2</div>
+      <div class="tick-label">ETH/USDT</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"BINANCE:ETHUSDT","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
+    </div>
+    <div class="tick cyan-t"><div class="tick-idx">C3</div>
+      <div class="tick-label">SOL/USDT</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"BINANCE:SOLUSDT","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
+    </div>
+    <div class="tick cyan-t"><div class="tick-idx">C4</div>
+      <div class="tick-label">TOTAL MCAP</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"CRYPTOCAP:TOTAL","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
+    </div>
+    <div class="tick cyan-t"><div class="tick-idx">C5</div>
+      <div class="tick-label">BTC.D · DOMINANCE</div>
+      <div class="tick-tv"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+        <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"CRYPTOCAP:BTC.D","width":"100%","isTransparent":true,"colorTheme":"dark","locale":"en"}</script>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- Crypto Charts + Table -->
+  <div class="col3">
+
+    <!-- BTC Chart -->
+    <div class="panel cyan-p" style="animation-delay:.5s">
+      <div class="panel-head cyan-h">
+        <div class="panel-title c">// BTC/USDT CHART</div>
+        <div class="tabs" id="btabs">
+          <button class="tab" data-biv="60">1H</button>
+          <button class="tab ca" data-biv="D">1D</button>
+          <button class="tab" data-biv="W">1W</button>
+        </div>
       </div>
-      <div class="hotlist-wrap">
+      <div class="h350">
         <div class="tradingview-widget-container" style="height:100%;width:100%">
-          <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
-          {
-            "colorTheme": "dark",
-            "dateRange": "12M",
-            "showChart": true,
-            "locale": "en",
-            "width": "100%",
-            "height": "100%",
-            "largeChartUrl": "",
-            "isTransparent": true,
-            "showSymbolLogo": false,
-            "showFloatingTooltip": false,
-            "plotLineColorGrowing": "rgba(212,168,67,0.8)",
-            "plotLineColorFalling": "rgba(224,88,88,0.8)",
-            "gridLineColor": "rgba(212,168,67,0.06)",
-            "scaleFontColor": "rgba(245,217,127,0.4)",
-            "belowLineFillColorGrowing": "rgba(212,168,67,0.04)",
-            "belowLineFillColorFalling": "rgba(224,88,88,0.04)",
-            "belowLineFillColorGrowingBottom": "transparent",
-            "belowLineFillColorFallingBottom": "transparent",
-            "symbolActiveColor": "rgba(212,168,67,0.1)",
-            "tabs": [
-              {
-                "title": "Metals",
-                "symbols": [
-                  { "s": "OANDA:XAUUSD", "d": "Gold" },
-                  { "s": "OANDA:XAGUSD", "d": "Silver" },
-                  { "s": "COMEX:GC1!",   "d": "Gold Futures" },
-                  { "s": "TVC:GOLD",     "d": "Gold CFD" },
-                  { "s": "COMEX:SI1!",   "d": "Silver Futures" },
-                  { "s": "NYMEX:PL1!",   "d": "Platinum" }
-                ],
-                "originalTitle": "Metals"
-              },
-              {
-                "title": "Related",
-                "symbols": [
-                  { "s": "TVC:DXY",      "d": "US Dollar" },
-                  { "s": "TVC:US10Y",    "d": "US 10Y Bond" },
-                  { "s": "FRED:CPIAUCSL","d": "CPI" },
-                  { "s": "COMEX:HG1!",   "d": "Copper" }
-                ],
-                "originalTitle": "Related"
+          <div id="tv_b" style="height:100%;width:100%"></div>
+          <script>
+            var tvB;
+            function initB(iv){
+              if(tvB){try{tvB.remove();}catch(e){}}
+              tvB = new TradingView.widget({
+                autosize:true, symbol:"BINANCE:BTCUSDT", interval:iv||"D",
+                timezone:"Asia/Bangkok", theme:"dark", style:"1", locale:"en",
+                toolbar_bg:"#050f08", enable_publishing:false, save_image:false,
+                container_id:"tv_b", backgroundColor:"rgba(2,8,5,1)",
+                gridColor:"rgba(0,229,255,0.04)",
+                overrides:{
+                  "paneProperties.background":"#020805",
+                  "scalesProperties.textColor":"#00e5ff55",
+                  "mainSeriesProperties.candleStyle.upColor":"#00e5ff",
+                  "mainSeriesProperties.candleStyle.downColor":"#ff2d55",
+                  "mainSeriesProperties.candleStyle.wickUpColor":"#00e5ff80",
+                  "mainSeriesProperties.candleStyle.wickDownColor":"#ff2d5580",
+                  "mainSeriesProperties.candleStyle.borderUpColor":"#00e5ff",
+                  "mainSeriesProperties.candleStyle.borderDownColor":"#ff2d55"
+                },
+                studies:["MASimple@tv-basicstudies","RSI@tv-basicstudies"]
+              });
+            }
+            initB("D");
+            document.getElementById('btabs').addEventListener('click',function(e){
+              var b=e.target.closest('[data-biv]');if(!b)return;
+              document.querySelectorAll('#btabs .tab').forEach(t=>{t.classList.remove('ca');});
+              b.classList.add('ca'); initB(b.dataset.biv);
+            });
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <!-- Market Cap Table -->
+    <div class="panel cyan-p" style="animation-delay:.58s">
+      <div class="panel-head cyan-h">
+        <div class="panel-title c">// MCAP RANKING</div>
+        <div class="panel-tag" id="upd-tag">SYNCING...</div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="loader" id="mcap-loader">[ FETCHING DATA... ]</div>
+        <table class="ctbl" id="mcap-tbl" style="display:none">
+          <thead><tr>
+            <th>#</th><th>ASSET</th><th>PRICE</th><th>24H%</th><th>MCAP</th><th>DOM%</th>
+          </tr></thead>
+          <tbody id="mcap-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Total Market Cap Chart -->
+    <div class="panel cyan-p" style="animation-delay:.65s">
+      <div class="panel-head cyan-h">
+        <div class="panel-title c">// TOTAL MARKET CAP</div>
+        <div class="panel-tag">CRYPTOCAP:TOTAL</div>
+      </div>
+      <div class="h350">
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+          <div id="tv_tot" style="height:100%;width:100%"></div>
+          <script>
+            new TradingView.widget({
+              autosize:true, symbol:"CRYPTOCAP:TOTAL", interval:"W",
+              timezone:"Asia/Bangkok", theme:"dark", style:"3", locale:"en",
+              toolbar_bg:"#050f08", enable_publishing:false, save_image:false,
+              container_id:"tv_tot", backgroundColor:"rgba(2,8,5,1)",
+              gridColor:"rgba(0,229,255,0.04)",
+              overrides:{
+                "paneProperties.background":"#020805",
+                "scalesProperties.textColor":"#00e5ff55",
+                "mainSeriesProperties.areaStyle.color1":"rgba(0,229,255,0.25)",
+                "mainSeriesProperties.areaStyle.color2":"rgba(0,229,255,0.02)",
+                "mainSeriesProperties.areaStyle.linecolor":"#00e5ff"
               }
-            ]
-          }
+            });
           </script>
         </div>
       </div>
     </div>
 
-    <!-- Technical Analysis -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Technical Analysis <span>XAU/USD</span></div>
-      </div>
-      <div style="height:300px;">
-        <div class="tradingview-widget-container" style="height:100%;width:100%">
-          <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-          {
-            "interval": "1D",
-            "width": "100%",
-            "isTransparent": true,
-            "height": "100%",
-            "symbol": "OANDA:XAUUSD",
-            "showIntervalTabs": true,
-            "displayMode": "single",
-            "locale": "en",
-            "colorTheme": "dark"
-          }
-          </script>
-        </div>
-      </div>
-    </div>
+  </div><!-- /col3 crypto -->
 
-  </div><!-- /bottom-row -->
+
+  <!-- ══════════════ STAT CARDS ══════════════ -->
+  <div class="sec-label grn">[ 03 ] // MARKET INTELLIGENCE // KEY METRICS</div>
+
+  <div class="stat-row">
+    <div class="stat-card" style="animation-delay:.7s">
+      <div class="stat-lbl">[ XAU/USD · LIVE PRICE ]</div>
+      <div class="stat-val o" id="s-gold">LIVE↑</div>
+      <div class="stat-note">Powered by TradingView · OANDA feed</div>
+    </div>
+    <div class="stat-card" style="animation-delay:.76s">
+      <div class="stat-lbl">[ CRYPTO TOTAL MCAP ]</div>
+      <div class="stat-val c" id="s-mcap">—</div>
+      <div class="stat-note">Combined top-10 market cap</div>
+    </div>
+    <div class="stat-card" style="animation-delay:.82s">
+      <div class="stat-lbl">[ BTC DOMINANCE ]</div>
+      <div class="stat-val g" id="s-dom">—</div>
+      <div class="stat-note">BTC share of total crypto mcap</div>
+    </div>
+    <div class="stat-card" style="animation-delay:.88s">
+      <div class="stat-lbl">[ FEAR &amp; GREED INDEX ]</div>
+      <div class="stat-val g" id="s-fng">—</div>
+      <div class="stat-note" id="s-fng-lbl">Market sentiment signal</div>
+    </div>
+  </div>
 
 </main>
 
-<!-- ─── FOOTER ─── -->
+<!-- FOOTER -->
 <footer>
-  Gold Dashboard · Data powered by <span>TradingView</span> · Deploy on <span>Vercel</span>
+  <span class="hl">NEXUS_TERMINAL</span> // DATA: <span class="hl2">TRADINGVIEW</span> · <span class="hl">COINGECKO API</span> · <span class="hl2">ALTERNATIVE.ME</span> // DEPLOY ON VERCEL STATIC
 </footer>
 
-<!-- Clock -->
+<!-- SCRIPTS -->
 <script>
-  function updateClock() {
-    var now = new Date();
-    var options = { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-    document.getElementById('clock').textContent = 'BKK ' + now.toLocaleTimeString('th-TH', options);
-  }
-  updateClock();
-  setInterval(updateClock, 1000);
+// ── MATRIX RAIN ──
+(function(){
+  var c=document.getElementById('matrix-bg'),ctx=c.getContext('2d');
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  resize(); window.addEventListener('resize',resize);
+  var chars='01アイウエオカキクケサシスセタチツテトナニヌ∆Σ∏∞≡≠≤ABCDEF';
+  var fs=13, cols, drops;
+  function init(){cols=Math.floor(c.width/fs);drops=Array(cols).fill(1);}
+  init(); window.addEventListener('resize',init);
+  setInterval(function(){
+    ctx.fillStyle='rgba(2,8,5,0.04)';
+    ctx.fillRect(0,0,c.width,c.height);
+    ctx.font=fs+'px Share Tech Mono';
+    for(var i=0;i<drops.length;i++){
+      var alpha=Math.random()>.8?1:.4;
+      ctx.fillStyle='rgba(0,255,65,'+alpha+')';
+      ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*fs,drops[i]*fs);
+      if(drops[i]*fs>c.height&&Math.random()>.975)drops[i]=0;
+      drops[i]++;
+    }
+  },55);
+})();
+
+// ── CLOCK ──
+function tick(){
+  var now=new Date();
+  var opt={timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false};
+  document.getElementById('clock').textContent=now.toLocaleTimeString('en-GB',opt)+' BKK';
+}
+tick(); setInterval(tick,1000);
+
+// ── FORMAT HELPERS ──
+function fmtMcap(n){
+  if(n>=1e12)return'$'+(n/1e12).toFixed(2)+'T';
+  if(n>=1e9) return'$'+(n/1e9).toFixed(1)+'B';
+  if(n>=1e6) return'$'+(n/1e6).toFixed(1)+'M';
+  return'$'+n.toFixed(0);
+}
+function fmtPrc(p){
+  if(p>=1000)return'$'+p.toLocaleString('en-US',{maximumFractionDigits:0});
+  if(p>=1)   return'$'+p.toFixed(2);
+  return'$'+p.toFixed(5);
+}
+
+// ── COIN COLORS ──
+var CC={
+  'bitcoin':      {bg:'rgba(247,147,26,.15)',  bd:'#f7931a',tx:'#f7931a',ab:'BTC'},
+  'ethereum':     {bg:'rgba(98,126,234,.15)',   bd:'#627eea',tx:'#627eea',ab:'ETH'},
+  'tether':       {bg:'rgba(38,161,123,.15)',   bd:'#26a17b',tx:'#26a17b',ab:'UST'},
+  'binancecoin':  {bg:'rgba(243,186,47,.15)',   bd:'#f3ba2f',tx:'#f3ba2f',ab:'BNB'},
+  'usd-coin':     {bg:'rgba(39,117,202,.15)',   bd:'#2775ca',tx:'#2775ca',ab:'UDC'},
+  'xrp':          {bg:'rgba(0,168,207,.15)',    bd:'#00a8cf',tx:'#00a8cf',ab:'XRP'},
+  'solana':       {bg:'rgba(153,69,255,.15)',   bd:'#9945ff',tx:'#9945ff',ab:'SOL'},
+  'dogecoin':     {bg:'rgba(196,170,89,.15)',   bd:'#c4aa59',tx:'#c4aa59',ab:'DGE'},
+  'cardano':      {bg:'rgba(0,51,173,.15)',     bd:'#4a90e2',tx:'#4a90e2',ab:'ADA'},
+  'avalanche-2':  {bg:'rgba(232,65,66,.15)',    bd:'#e84142',tx:'#e84142',ab:'AVX'},
+  'default':      {bg:'rgba(0,229,255,.08)',    bd:'#00e5ff',tx:'#00e5ff',ab:'???'}
+};
+
+var totalMcap=0;
+
+function loadCrypto(){
+  fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    totalMcap=data.reduce(function(s,c){return s+(c.market_cap||0);},0);
+    var tbody=document.getElementById('mcap-body');
+    tbody.innerHTML='';
+    data.forEach(function(coin,i){
+      var c=CC[coin.id]||CC['default'];
+      var pct=coin.price_change_percentage_24h||0;
+      var pStr=(pct>=0?'+':'')+pct.toFixed(2)+'%';
+      var cls=pct>=0?'up':'dn';
+      var dom=totalMcap>0?((coin.market_cap/totalMcap)*100).toFixed(1):'—';
+      var barW=totalMcap>0?Math.min((coin.market_cap/(totalMcap*0.5))*60,60):0;
+      tbody.innerHTML+=
+        '<tr>'+
+        '<td><span class="rnk">'+(i+1).toString().padStart(2,'0')+'</span></td>'+
+        '<td><div class="coin-cell">'+
+          '<div class="coin-ico" style="background:'+c.bg+';border-color:'+c.bd+';color:'+c.tx+'">'+c.ab.slice(0,3)+'</div>'+
+          '<div><div class="coin-nm" style="color:'+c.tx+'">'+coin.name+'</div>'+
+               '<div class="coin-sym">'+coin.symbol.toUpperCase()+'</div></div>'+
+        '</div></td>'+
+        '<td><span class="prc" style="color:'+c.tx+'">'+fmtPrc(coin.current_price)+'</span></td>'+
+        '<td><span class="chg '+cls+'">'+pStr+'</span></td>'+
+        '<td style="color:var(--text-dim)">'+fmtMcap(coin.market_cap)+'</td>'+
+        '<td><div class="bar-wrap"><div class="bar-pct '+cls+'">'+dom+'%</div>'+
+            '<div class="bar-bg"><div class="bar-fill" style="width:'+barW+'px;background:'+c.tx+'55"></div></div>'+
+        '</div></td>'+
+        '</tr>';
+    });
+    document.getElementById('mcap-loader').style.display='none';
+    document.getElementById('mcap-tbl').style.display='table';
+    var now=new Date();
+    document.getElementById('upd-tag').textContent='UPD '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    // stat cards
+    document.getElementById('s-mcap').textContent=fmtMcap(totalMcap);
+    var btc=data.find(function(c){return c.id==='bitcoin';});
+    if(btc)document.getElementById('s-dom').textContent=((btc.market_cap/totalMcap)*100).toFixed(1)+'%';
+  })
+  .catch(function(){
+    document.getElementById('mcap-loader').textContent='[ API UNREACHABLE ]';
+  });
+}
+
+// ── FEAR & GREED ──
+function loadFNG(){
+  fetch('https://api.alternative.me/fng/?limit=1')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var val=+d.data[0].value, lbl=d.data[0].value_classification;
+    var el=document.getElementById('s-fng');
+    el.textContent=val;
+    el.className='stat-val '+(val<25?'r':val<50?'o':val<75?'g':'c');
+    document.getElementById('s-fng-lbl').textContent=lbl.toUpperCase();
+  })
+  .catch(function(){document.getElementById('s-fng').textContent='N/A';});
+}
+
+loadCrypto(); loadFNG();
+setInterval(loadCrypto,60000);
+setInterval(loadFNG,300000);
 </script>
 
 </body>
